@@ -45,7 +45,7 @@ def split_pdf():
         for page in range(start, end):
             pdf_writer.add_page(pdf_reader.pages[page])
 
-        output_filename = f"{output_folder}/pages_{start+1}_to_{end}.pdf"
+        output_filename = f"{output_folder}/side_{start+1}_til_{end}.pdf"
         
         with open(output_filename, 'wb') as output_file:
             pdf_writer.write(output_file)
@@ -113,6 +113,6 @@ while 1:
 """
 Skrevet og udviklet af Lucas Hjort Rahr Hartung 
 lhhar@aabenraa.dk
-15/12/2023
+02/05/2024
 
 """
