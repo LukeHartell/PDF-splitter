@@ -5,7 +5,7 @@ import PyPDF2
 import sys
 import requests
 
-CURRENT_VERSION = "v1.1"
+CURRENT_VERSION = "v1.2"
 
 
 # Check if running as a PyInstaller bundle
