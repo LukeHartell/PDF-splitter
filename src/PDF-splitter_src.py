@@ -3,6 +3,10 @@ from tkinter import ttk, messagebox
 import os
 import PyPDF2
 import sys
+import requests
+
+CURRENT_VERSION = "v1.1"
+
 
 # Check if running as a PyInstaller bundle
 if getattr(sys, 'frozen', False):
@@ -14,6 +18,21 @@ else:
 
 def on_close():
         window.destroy()  # This ensures the application is terminated properly
+
+def check_for_updates():
+    repo_owner = "LukeHartell"
+    repo_name = "PDF-splitter"
+    api_url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/releases/latest"
+
+    try:
+        response = requests.get(api_url)
+        response.raise_for_status()
+        latest_release = response.json()
+        latest_version = latest_release["tag_name"]
+        if latest_version > CURRENT_VERSION:
+            messagebox.showinfo("Tid til en opdatering", "Der er en ny version af PDF-splitter klar til dig.")
+    except:
+        pass
 
 # Function to split the PDF based on user inputs
 def split_pdf():
@@ -126,6 +145,8 @@ if getattr(sys, 'frozen', False):
 
 # Set the protocol for the window close button ('X')
 window.protocol("WM_DELETE_WINDOW", on_close)
+
+check_for_updates()
 
 # Run the Tkinter main loop
 window.mainloop()
