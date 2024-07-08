@@ -2,6 +2,18 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import os
 import PyPDF2
+import sys
+
+# Check if running as a PyInstaller bundle
+if getattr(sys, 'frozen', False):
+    import pyi_splash
+    # Use sys._MEIPASS to get the path to the bundled data
+    icon_path = os.path.join(sys._MEIPASS, "pdfsplitter-logo.ico")
+else:
+    icon_path = "./assets/pdfsplitter-logo.ico"
+
+def on_close():
+        window.destroy()  # This ensures the application is terminated properly
 
 # Function to split the PDF based on user inputs
 def split_pdf():
@@ -10,13 +22,9 @@ def split_pdf():
     output_folder = f"{file_path[:-4]}_output"  # Defines the output folder name
 
     # Check if the specified file exists and is a PDF
-    if not os.path.exists(f"{file_path[:-4]}.pdf"):
-        if not os.path.exists(file_path):
-            messagebox.showerror("Fejl", f"Kunne ikke finde en fil kaldet \"{file_path}\"")
-            return
-        else:
-            messagebox.showerror("Fejl", " Den oplyste fil er ikke en PDF")
-            return
+    if not file_path.lower().endswith(".pdf") or not os.path.exists(file_path):
+        messagebox.showerror("Fejl", f"Kunne ikke finde en fil kaldet \"{file_path}\" eller filen er ikke en PDF")
+        return
 
     # Check that the number of pages per split is greater than 0
     if chunk_size <= 0:
@@ -33,32 +41,38 @@ def split_pdf():
     # Update window title to indicate the splitting process
     window.title("I gang med at splitte...")
 
-    # Read the PDF and determine the total number of pages
-    pdf_reader = PyPDF2.PdfReader(open(file_path, 'rb'))
-    total_pages = len(pdf_reader.pages)
+    try:
+        # Read the PDF and determine the total number of pages
+        with open(file_path, 'rb') as pdf_file:
+            pdf_reader = PyPDF2.PdfReader(pdf_file)
+            total_pages = len(pdf_reader.pages)
 
-    # Split the PDF into chunks
-    for start in range(0, total_pages, chunk_size):
-        pdf_writer = PyPDF2.PdfWriter()
-        end = min(start + chunk_size, total_pages)
+            # Split the PDF into chunks
+            for start in range(0, total_pages, chunk_size):
+                pdf_writer = PyPDF2.PdfWriter()
+                end = min(start + chunk_size, total_pages)
 
-        for page in range(start, end):
-            pdf_writer.add_page(pdf_reader.pages[page])
+                for page in range(start, end):
+                    pdf_writer.add_page(pdf_reader.pages[page])
 
-        output_filename = f"{output_folder}/side_{start+1}_til_{end}.pdf"
-        
-        with open(output_filename, 'wb') as output_file:
-            pdf_writer.write(output_file)
+                output_filename = f"{output_folder}/side_{start+1}_til_{end}.pdf"
 
-    # Update window title and show a success message
-    window.title("PDF-splitter")
-    messagebox.showinfo("Succes!", f"PDF blev splittet!\nOpdelte filer er gemt her:\n{output_folder}")
+                with open(output_filename, 'wb') as output_file:
+                    pdf_writer.write(output_file)
+
+        # Update window title and show a success message
+        window.title("PDF-splitter")
+        messagebox.showinfo("Succes!", f"PDF blev splittet!\nOpdelte filer er gemt her:\n{output_folder}")
+
+    except Exception as e:
+        messagebox.showerror("Fejl", f"En fejl opstod: {e}")
 
 # Create a Tkinter window
 window = tk.Tk()
 window.title("PDF-splitter")
 window.geometry('500x250')
 window.resizable(False, False)
+window.iconbitmap(icon_path)
 
 # Define color scheme
 primary_color = '#f18c4d'  # Orange
@@ -106,13 +120,12 @@ input_frame.columnconfigure(0, weight=1)
 # Set the main window's background color
 window.configure(bg=bg_color)
 
+# Close the splash screen if running in a PyInstaller bundle
+if getattr(sys, 'frozen', False):
+    pyi_splash.close()
+
+# Set the protocol for the window close button ('X')
+window.protocol("WM_DELETE_WINDOW", on_close)
+
 # Run the Tkinter main loop
-while 1:
-    window.mainloop()
-
-"""
-Skrevet og udviklet af Lucas Hjort Rahr Hartung 
-lhhar@aabenraa.dk
-02/05/2024
-
-"""
+window.mainloop()
